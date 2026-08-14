@@ -1,0 +1,16 @@
+CREATE TABLE IF NOT EXISTS agent_tasks (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  run_id VARCHAR(64) NOT NULL,
+  status VARCHAR(32) NOT NULL DEFAULT 'queued',
+  attempts INT NOT NULL DEFAULT 0,
+  max_attempts INT NOT NULL DEFAULT 3,
+  last_error TEXT NULL,
+  locked_at TIMESTAMP NULL,
+  locked_by VARCHAR(128) NULL,
+  scheduled_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_tasks_run (run_id),
+  INDEX idx_tasks_dequeue (status, scheduled_at),
+  CONSTRAINT fk_tasks_run FOREIGN KEY (run_id) REFERENCES agent_runs(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

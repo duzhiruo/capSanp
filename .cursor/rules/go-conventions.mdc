@@ -1,0 +1,40 @@
+---
+description: Go 编码规范（capSanp 专用），基于标准库的 Agent 项目架构
+globs: "**/*.go"
+alwaysApply: false
+---
+
+# Go 编码规范（capSanp）
+
+## 分层架构
+
+```
+cmd/ (入口) → app (组装) → httpapi (HTTP) / agent (编排) / tools (工具) / store (数据)
+```
+
+- **httpapi**：路由和 HTTP 处理，使用标准库 `ServeMux`（非 chi）
+- **agent**：Agent 工作流编排，调用 tools.Registry
+- **tools**：通过 `Tool` 接口 + `Registry` 注册表实现可插拔工具
+- **store**：`Repository` 接口 + `MySQL` / `Memory` 实现
+- 组装在 `app/app.go` 中完成（依赖注入）
+
+## 与工作项目的差异（重要）
+
+- HTTP 框架：标准库 `net/http`（非 chi）
+- 数据库：原生 `database/sql`（非 GORM）
+- 无 Kafka / Redis / Nacos
+- 日志：`log/slog`（非自定义 logger）
+- SQL 直接写在 store 实现中，非 ORM 映射
+
+## 错误处理
+
+- 使用 Go 标准 error 模式
+- HTTP 响应使用 JSON `{"error": "message"}` 格式
+- 所有 error 必须处理
+
+## 代码修改原则
+
+- 最小化变更：只改需要改的
+- 新增 Tool 时在 `tools/` 下新建文件并注册到 Registry
+- 新增 API 时在 `httpapi/server.go` 中添加路由
+- 数据库变更需新建 migration 文件（`migrations/` 目录）
